@@ -57,7 +57,7 @@ const FeaturedCars = () => {
                                                 alt={`${car.make} ${car.model}`} 
                                                 onError={(e) => {
                                                     e.target.onerror = null;
-                                                    e.target.src = `https://via.placeholder.com/400x300/1e1e1e/e0e0e0?text=${car.make}+${car.model}`;
+                                                    e.target.src = `https://images.hgmsites.net/hug/2022-honda-insight_100793130_h.jpg`;
                                                 }}
                                             />
                                         </figure>

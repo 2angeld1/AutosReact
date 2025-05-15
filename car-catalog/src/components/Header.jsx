@@ -50,7 +50,7 @@ const Header = () => {
 
                 <div className={`navbar-menu ${isActive ? 'is-active' : ''}`}>
                     <div className="navbar-end">
-                        <NavLink className="navbar-item" to="/" exact>
+                        <NavLink className="navbar-item" to="/" end>
                             Inicio
                         </NavLink>
                         <NavLink className="navbar-item" to="/favorites">

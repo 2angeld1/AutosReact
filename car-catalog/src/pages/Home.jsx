@@ -3,81 +3,105 @@ import { Link } from 'react-router-dom';
 import SearchFilter from '../components/SearchFilter';
 import { CarContext } from '../context/CarContext';
 import Testimonials from '../components/Testimonials';
-import Stats from '../components/Stats';
 import DotPattern from '../components/DotPattern';
-import { fetchFeaturedCars, searchCars } from '../services/api';
+import { fetchCars, searchCars } from '../services/api';
 
 const Home = () => {
-    const { cars, loading } = useContext(CarContext);
+    const { cars: contextCars, loading: contextLoading } = useContext(CarContext);
     
-    // Estado para vehículos destacados (independiente)
-    const [featuredCars, setFeaturedCars] = useState([]);
-    const [loadingFeatured, setLoadingFeatured] = useState(true);
+    // Estado unificado para vehículos
+    const [displayedCars, setDisplayedCars] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
-    const slidesToShow = 4; // Cuántos slides mostrar a la vez en el carrusel
+    const slidesToShow = 4; // Cuántos slides mostrar a la vez
     
     // Estado para resultados de búsqueda
-    const [searchResults, setSearchResults] = useState([]);
-    const [hasSearched, setHasSearched] = useState(false);
-    const [searchLoading, setSearchLoading] = useState(false);
+    const [ setHasSearched] = useState(false);
     const [searchError, setSearchError] = useState(null);
     
-    // Cargar vehículos destacados al montar el componente
+    // Cargar vehículos al montar el componente (una sola llamada)
     useEffect(() => {
-        const loadFeaturedCars = async () => {
+        const loadCars = async () => {
             try {
-                setLoadingFeatured(true);
-                // Llamada a la API específica para obtener vehículos destacados
-                const featured = await fetchFeaturedCars();
-                setFeaturedCars(featured);
+                setLoading(true);
+                // Si ya tenemos coches en el contexto, los usamos
+                if (contextCars && contextCars.length > 0 && !contextLoading) {
+                    // Filtra Honda Insight Touring antes de mostrar
+                    const filtered = contextCars.filter(car => 
+                        !(car.make.toLowerCase() === 'honda' && 
+                          car.model.toLowerCase() === 'insight')
+                    );
+                    setDisplayedCars(filtered);
+                } else {
+                    // Si no, hacemos una sola llamada para obtenerlos
+                    const fetchedCars = await fetchCars();
+                    // El filtrado ya se debería haber hecho en fetchCars
+                    setDisplayedCars(fetchedCars);
+                }
             } catch (error) {
-                console.error("Error loading featured cars:", error);
+                console.error("Error loading cars:", error);
+                setSearchError("No pudimos cargar los vehículos. Por favor intenta nuevamente.");
             } finally {
-                setLoadingFeatured(false);
+                setLoading(false);
             }
         };
         
-        loadFeaturedCars();
-    }, []);
+        loadCars();
+    }, [contextCars, contextLoading]);
 
     // Manejadores para el carrusel
     const nextSlide = () => {
         setCurrentSlide(current => 
-            current + slidesToShow >= featuredCars.length ? 0 : current + slidesToShow
+            current + slidesToShow >= displayedCars.length ? 0 : current + slidesToShow
         );
     };
 
     const prevSlide = () => {
         setCurrentSlide(current => 
-            current - slidesToShow < 0 ? Math.max(0, featuredCars.length - slidesToShow) : current - slidesToShow
+            current - slidesToShow < 0 ? Math.max(0, displayedCars.length - slidesToShow) : current - slidesToShow
         );
     };
-    
-    // Manejador para la búsqueda personalizada
+    const getBrandColor = (make) => {
+        const brandColors = {
+            toyota: '#e50000',
+            kia: '#0033a0',
+            nissan: '#c3002f',
+            ford: '#003478',
+            chevrolet: '#d1a856',
+            bmw: '#0066b1',
+            audi: '#bb0a30',
+            mercedes: '#00adef',
+            honda: '#cc0000',
+            hyundai: '#002c5f',
+            volkswagen: '#00237d',
+            lexus: '#0F2338'
+        };
+        
+        return brandColors[make?.toLowerCase()] || '#6b7280';
+    };
+    // Manejador para la búsqueda unificada
     const handleSearch = async (filters) => {
         try {
-            setSearchLoading(true);
+            setLoading(true);
             setSearchError(null);
             
-            // Llamar a la API para buscar globalmente
+            // Llamar a la API con los filtros
             const results = await searchCars(filters);
             
-            setSearchResults(results);
+            setDisplayedCars(results);
             setHasSearched(true);
         } catch (error) {
             console.error("Error searching cars:", error);
             setSearchError("Ocurrió un error al buscar. Por favor intenta nuevamente.");
-            setSearchResults([]);
         } finally {
-            setSearchLoading(false);
+            setLoading(false);
         }
     };
 
     return (
         <div>
-            {/* Hero Section Rediseñado */}
+            {/* Hero Section */}
             <section className="hero is-fullheight-with-navbar luxury-dark-hero">
-                {/* Patrón de puntos SVG */}
                 <DotPattern />
                 
                 <div className="hero-body">
@@ -138,17 +162,12 @@ const Home = () => {
                             <div className="column is-6 is-hidden-mobile">
                                 <div className="luxury-car-showcase">
                                     <img 
-                                        src="https://images.unsplash.com/photo-1611859266238-4b98091d9d9b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&q=80" 
-                                        alt="Ford Mustang destacado" 
-                                        className="luxury-car-image" 
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = "https://via.placeholder.com/800x500/1a1a1a/bb86fc?text=Ford+Mustang";
-                                        }}
+                                        src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&q=80" 
+                                        alt="Auto destacado" 
+                                        className="luxury-car-image"
                                     />
                                     <div className="luxury-car-details">
-                                        <span className="tag is-accent mb-2">Destacado</span>
-                                        <h3 className="title is-4 has-text-white mb-1">Ford Mustang GT</h3>
+                                        <h3 className="title is-3 has-text-white has-text-shadow">Chevrolet Corvette</h3>
                                         <p className="has-text-grey-lighter mb-3">Potencia y diseño icónico</p>
                                         <a href="#featured-cars" className="button is-small is-accent is-outlined">Ver detalles</a>
                                     </div>
@@ -209,102 +228,198 @@ const Home = () => {
                 </div>
             </section>
             
-            {/* Vehículos Destacados - Carrusel (Independiente) */}
+            {/* Sección de búsqueda y vehículos destacados (fusionados) */}
             <section className="section" id="featured-cars">
                 <div className="container">
                     <h2 className="title is-2 has-text-centered animate-fadeIn section-title">
-                        Vehículos Destacados
+                        Explora Nuestra Colección
                     </h2>
                     <p className="subtitle has-text-centered has-text-grey-light mb-6">
-                        Una selección exclusiva de nuestros mejores modelos
+                        Encuentra el auto perfecto según tus preferencias
                     </p>
                     
-                    {!loadingFeatured && featuredCars.length > 0 && (
-                        <div className="carousel-container">
-                            <button 
-                                className="carousel-button prev-button" 
-                                onClick={prevSlide}
-                                aria-label="Ver autos anteriores"
-                            >
-                                <i className="fas fa-chevron-left"></i>
-                            </button>
-                            
-                            <div className="carousel-wrapper">
-                                <div 
-                                    className="carousel-track" 
-                                    style={{ transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)` }}
+                    {/* Filtros de búsqueda integrados */}
+                    <div className="box has-background-dark has-shadow animate-fadeIn mb-6" id="search">
+                        <SearchFilter onSearch={handleSearch} cars={displayedCars} />
+                    </div>
+                    
+                    {/* Mostrar estado de carga */}
+                    {loading && (
+                        <div className="has-text-centered p-6">
+                            <div className="button is-loading is-large is-white"></div>
+                            <p className="mt-4 is-size-5 has-text-grey-light">Cargando vehículos...</p>
+                        </div>
+                    )}
+                    
+                    {/* Mostrar error si ocurre */}
+                    {searchError && (
+                        <div className="notification is-danger mt-5">
+                            <button className="delete" onClick={() => setSearchError(null)}></button>
+                            {searchError}
+                        </div>
+                    )}
+                    
+                    {/* Resultados/Vehículos destacados */}
+                    {!loading && displayedCars.length > 0 && (
+                        <div className="featured-cars-container">
+                            <div className="carousel-container position-relative">
+                                <button 
+                                    className="carousel-button prev-button" 
+                                    onClick={prevSlide}
+                                    aria-label="Ver autos anteriores"
                                 >
-                                    {featuredCars.map(car => (
-                                        <div key={car.id} className="carousel-item">
-                                            <div className="card">
-                                                <div className="card-image">
-                                                    <figure className="image is-3by2">
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                
+                                <div className="featured-cars-slider">
+                                    <div className="columns" style={{ width: 'max-content' }}>
+                                        {displayedCars.slice(currentSlide, currentSlide + slidesToShow * 2).map(car => (
+                                            <div key={car.id} className="column is-3-desktop" style={{ width: '300px' }}>
+                                                <div className="card animate-fadeIn">
+                                                    <div className="card-image">
                                                         <img 
                                                             src={car.image} 
                                                             alt={`${car.make} ${car.model}`}
                                                             className="car-image"
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
-                                                                e.target.src = `https://via.placeholder.com/400x267/1a1a1a/bb86fc?text=${car.make}+${car.model}`;
+                                                                e.target.src = `https://images.hgmsites.net/hug/2022-honda-insight_100793130_h.jpg`;
                                                             }}
                                                         />
-                                                        <span className="car-brand-badge">{car.make}</span>
-                                                    </figure>
-                                                </div>
-                                                <div className="card-content">
-                                                    <p className="title is-5">{car.make} {car.model}</p>
-                                                    <p className="subtitle is-6">
-                                                        <span className="tag is-year mr-1">{car.year}</span>
-                                                    </p>
-                                                    <p className="price-tag mb-2">${car.price?.toLocaleString()}</p>
-                                                    <div className="tags">
-                                                        <span className="tag is-feature">{car.fuel_type}</span>
-                                                        <span className="tag is-feature">{car.cylinders} cil.</span>
+                                                        <div className="car-badge">
+                                                            <span>{car.year}</span>
+                                                        </div>
+                                                        <div className="car-price-tag">
+                                                            <span>${car.price.toLocaleString()}</span>
+                                                        </div>
                                                     </div>
+                                                    <div className="card-content">
+                                                        <div className="car-details">
+                                                            <h3 className="car-model">{car.make} {car.model}</h3>
+                                                            <p className="car-subtitle">
+                                                                {car.transmission === 'a' ? 'Automático' : 'Manual'} · {car.fuel_type}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        <div className="car-features">
+                                                            <div className="feature-item">
+                                                                <span className="icon">
+                                                                    <i className="fas fa-gas-pump"></i>
+                                                                </span>
+                                                                <span className="has-text-grey-lighter">{car.fuel_type}</span>
+                                                            </div>
+                                                            <div className="feature-item">
+                                                                <span className="icon">
+                                                                    <i className="fas fa-cog"></i>
+                                                                </span>
+                                                                <span className="has-text-grey-lighter">
+                                                                    {car.transmission === 'a' ? 'Auto' : 'Manual'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <footer className="card-footer">
+                                                        <Link to={`/car/${car.id}`} className="view-details-btn">
+                                                            <span>Ver detalles</span>
+                                                            <span className="icon">
+                                                                <i className="fas fa-arrow-right"></i>
+                                                            </span>
+                                                        </Link>
+                                                    </footer>
                                                 </div>
-                                                <footer className="card-footer">
-                                                    <Link to={`/car/${car.id}`} className="card-footer-item button is-accent">
-                                                        <span className="icon">
-                                                            <i className="fas fa-eye"></i>
-                                                        </span>
-                                                        <span>Ver detalles</span>
-                                                    </Link>
-                                                </footer>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
+                                
+                                <button 
+                                    className="carousel-button next-button" 
+                                    onClick={nextSlide}
+                                    aria-label="Ver más autos"
+                                >
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
                             </div>
                             
+                            <div className="has-text-centered mt-6">
+                                <Link to="/catalog" className="button is-accent is-medium">
+                                    <span className="icon">
+                                        <i className="fas fa-th-large"></i>
+                                    </span>
+                                    <span>Ver catálogo completo</span>
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {!loading && displayedCars.length === 0 && (
+                        <div className="notification is-warning has-text-centered">
+                            <p className="is-size-5">No se encontraron vehículos con esos criterios de búsqueda.</p>
                             <button 
-                                className="carousel-button next-button" 
-                                onClick={nextSlide}
-                                aria-label="Ver más autos"
+                                className="button is-warning is-light mt-3"
+                                onClick={() => window.location.reload()}
                             >
-                                <i className="fas fa-chevron-right"></i>
+                                Reiniciar búsqueda
                             </button>
                         </div>
                     )}
+                </div>
+            </section>
+            
+            {/* Nueva sección que reemplaza la búsqueda personalizada */}
+            <section className="section has-background-black-ter">
+                <div className="container">
+                    <h2 className="title is-2 has-text-centered animate-fadeIn section-title">
+                        Servicios Premium
+                    </h2>
+                    <p className="subtitle has-text-centered has-text-grey-light mb-6">
+                        Ofrecemos servicios exclusivos para una experiencia de compra superior
+                    </p>
                     
-                    {loadingFeatured && (
-                        <div className="has-text-centered p-6">
-                            <div className="button is-loading is-large is-white"></div>
-                            <p className="mt-4 is-size-5 has-text-grey-light">Cargando vehículos destacados...</p>
+                    <div className="columns is-multiline">
+                        <div className="column is-4">
+                            <div className="service-box animate-fadeIn">
+                                <div className="service-icon">
+                                    <i className="fas fa-money-check-alt"></i>
+                                </div>
+                                <h3 className="title is-4 mt-4 mb-3">Financiamiento Flexible</h3>
+                                <p className="has-text-grey-light">
+                                    Opciones de financiamiento personalizadas con tasas competitivas y plazos flexibles.
+                                </p>
+                                <a href="#" className="button is-small is-outlined is-accent mt-4">Más información</a>
+                            </div>
                         </div>
-                    )}
-                    
-                    <div className="has-text-centered mt-6">
-                        <Link to="/catalog" className="button is-accent is-medium">
-                            <span className="icon">
-                                <i className="fas fa-th-large"></i>
-                            </span>
-                            <span>Ver catálogo completo</span>
-                        </Link>
+                        
+                        <div className="column is-4">
+                            <div className="service-box animate-fadeIn" style={{animationDelay: "0.2s"}}>
+                                <div className="service-icon">
+                                    <i className="fas fa-tools"></i>
+                                </div>
+                                <h3 className="title is-4 mt-4 mb-3">Mantenimiento Premium</h3>
+                                <p className="has-text-grey-light">
+                                    Paquetes de mantenimiento exclusivos con técnicos certificados y repuestos originales.
+                                </p>
+                                <a href="#" className="button is-small is-outlined is-accent mt-4">Conocer paquetes</a>
+                            </div>
+                        </div>
+                        
+                        <div className="column is-4">
+                            <div className="service-box animate-fadeIn" style={{animationDelay: "0.4s"}}>
+                                <div className="service-icon">
+                                    <i className="fas fa-exchange-alt"></i>
+                                </div>
+                                <h3 className="title is-4 mt-4 mb-3">Programa de Intercambio</h3>
+                                <p className="has-text-grey-light">
+                                    Recibimos tu auto actual como parte del pago por tu nuevo vehículo de lujo.
+                                </p>
+                                <a href="#" className="button is-small is-outlined is-accent mt-4">Evaluar mi auto</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
             
-            {/* Sección de Categorías Populares */}
+            {/* Categorías Populares */}
             <section className="section has-background-black-ter">
                 <div className="container">
                     <h2 className="title is-2 has-text-centered animate-fadeIn section-title">
@@ -322,7 +437,7 @@ const Home = () => {
                                     alt="Sedanes" 
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = "https://via.placeholder.com/400x200/1a1a1a/bb86fc?text=Sedanes";
+                                        e.target.src = "https://source.unsplash.com/400x200/?sedan+car";
                                     }}
                                 />
                                 <div className="category-overlay">
@@ -340,7 +455,7 @@ const Home = () => {
                                     alt="SUVs" 
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = "https://via.placeholder.com/400x200/1a1a1a/bb86fc?text=SUVs";
+                                        e.target.src = "https://source.unsplash.com/400x200/?suv+car";
                                     }}
                                 />
                                 <div className="category-overlay">
@@ -354,11 +469,11 @@ const Home = () => {
                         <div className="column is-3-desktop is-6-tablet">
                             <div className="category-card animate-fadeIn">
                                 <img 
-                                    src="https://images.pexels.com/photos/3752169/pexels-photo-3752169.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750" 
+                                    src="https://images.pexels.com/photos/3764984/pexels-photo-3764984.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750" 
                                     alt="Deportivos" 
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = "https://via.placeholder.com/400x200/1a1a1a/bb86fc?text=Deportivos";
+                                        e.target.src = "https://source.unsplash.com/400x200/?sports+car";
                                     }}
                                 />
                                 <div className="category-overlay">
@@ -376,7 +491,7 @@ const Home = () => {
                                     alt="Eléctricos" 
                                     onError={(e) => {
                                         e.target.onerror = null;
-                                        e.target.src = "https://via.placeholder.com/400x200/1a1a1a/bb86fc?text=Eléctricos";
+                                        e.target.src = "https://source.unsplash.com/400x200/?electric+car";
                                     }}
                                 />
                                 <div className="category-overlay">
@@ -388,114 +503,6 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
-            
-            {/* Statistics */}
-            <Stats />
-            
-            {/* Búsqueda Personalizada (Independiente) */}
-            <section className="section" id="search">
-                <div className="container">
-                    <h2 className="title is-2 has-text-centered animate-fadeIn section-title">
-                        Búsqueda Personalizada
-                    </h2>
-                    <p className="subtitle has-text-centered has-text-grey-light mb-6">
-                        Encuentra el auto perfecto para ti con nuestros filtros avanzados
-                    </p>
-                    
-                    <div className="box has-background-dark has-shadow animate-fadeIn">
-                        <SearchFilter onSearch={handleSearch} />
-                    </div>
-                    
-                    {/* Mostrar estado de carga durante la búsqueda */}
-                    {searchLoading && (
-                        <div className="has-text-centered p-6">
-                            <div className="button is-loading is-large is-white"></div>
-                            <p className="mt-4 is-size-5 has-text-grey-light">Buscando vehículos...</p>
-                        </div>
-                    )}
-                    
-                    {/* Mostrar error si ocurre */}
-                    {searchError && (
-                        <div className="notification is-danger mt-5">
-                            <button className="delete" onClick={() => setSearchError(null)}></button>
-                            {searchError}
-                        </div>
-                    )}
-                    
-                    {/* Resultados de búsqueda */}
-                    {hasSearched && !searchLoading && (
-                        <div className="search-results mt-6">
-                            <h3 className="title is-4 mb-4">
-                                {searchResults.length > 0 
-                                    ? `Se encontraron ${searchResults.length} vehículos` 
-                                    : "No se encontraron vehículos con esos criterios"}
-                            </h3>
-                            
-                            {searchResults.length > 0 && (
-                                <div className="columns is-multiline">
-                                    {searchResults.map(car => (
-                                        <div key={car.id} className="column is-3-desktop is-6-tablet">
-                                            <div className="card">
-                                                <div className="card-image">
-                                                    <figure className="image is-3by2">
-                                                        <img 
-                                                            src={car.image} 
-                                                            alt={`${car.make} ${car.model}`}
-                                                            className="car-image"
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = `https://via.placeholder.com/400x267/1a1a1a/bb86fc?text=${car.make}+${car.model}`;
-                                                            }}
-                                                        />
-                                                        <span className="car-brand-badge">{car.make}</span>
-                                                    </figure>
-                                                </div>
-                                                <div className="card-content">
-                                                    <p className="title is-5">{car.make} {car.model}</p>
-                                                    <p className="subtitle is-6">
-                                                        <span className="tag is-year mr-1">{car.year}</span>
-                                                    </p>
-                                                    <p className="price-tag mb-2">${car.price?.toLocaleString()}</p>
-                                                    <div className="tags">
-                                                        <span className="tag is-feature">{car.fuel_type}</span>
-                                                        <span className="tag is-feature">{car.cylinders} cil.</span>
-                                                    </div>
-                                                </div>
-                                                <footer className="card-footer">
-                                                    <Link to={`/car/${car.id}`} className="card-footer-item button is-accent">
-                                                        <span className="icon">
-                                                            <i className="fas fa-eye"></i>
-                                                        </span>
-                                                        <span>Ver detalles</span>
-                                                    </Link>
-                                                </footer>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            
-                            {/* Botón para cargar más resultados si hay muchos */}
-                            {searchResults.length > 0 && searchResults.length % 12 === 0 && (
-                                <div className="has-text-centered mt-6">
-                                    <button 
-                                        className="button is-outlined is-accent is-medium"
-                                        onClick={() => {
-                                            // Aquí se podría implementar paginación o carga de más resultados
-                                            alert("Función para cargar más resultados en desarrollo");
-                                        }}
-                                    >
-                                        <span className="icon">
-                                            <i className="fas fa-plus"></i>
-                                        </span>
-                                        <span>Cargar más</span>
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
             </section>
             

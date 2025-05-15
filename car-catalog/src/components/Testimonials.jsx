@@ -11,7 +11,7 @@ const Testimonials = () => {
         },
         {
             id: 2,
-            text: "Excelente servicio. Pude comparar varios modelos de Honda antes de decidirme por el Civic. La información detallada me ayudó mucho en mi decisión.",
+            text: "Excelente servicio. Pude comparar varios modelos de Kia antes de decidirme por el Civic. La información detallada me ayudó mucho en mi decisión.",
             author: "Carlos Rodríguez",
             role: "Ingeniero",
             avatar: "https://randomuser.me/api/portraits/men/2.jpg"

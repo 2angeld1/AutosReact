@@ -14,7 +14,7 @@ const CarGallery = ({ car, imgError, onImageError }) => {
     const getBrandColor = (make) => {
         const brandColors = {
             toyota: '#e50000',
-            honda: '#0033a0',
+            kia: '#0033a0',
             nissan: '#c3002f',
             ford: '#003478',
             chevrolet: '#d1a856',
@@ -29,7 +29,7 @@ const CarGallery = ({ car, imgError, onImageError }) => {
     // Estas URLs son simuladas - usamos placeholders en caso de error
     const getPlaceholderImage = (carInfo, type = 'main') => {
         const makeModel = `${carInfo.make} ${carInfo.model}`;
-        return `https://via.placeholder.com/800x450/1a1a1a/bb86fc?text=${makeModel}+${type}`;
+        return `https://source.unsplash.com/800x450/?${makeModel}+${type}+car`;
     };
     
     const getGalleryImage = (imageType) => {

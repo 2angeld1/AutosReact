@@ -5,7 +5,7 @@ const CarHero = ({ car, isFavorite, toggleFavorite }) => {
     const getBrandColor = (make) => {
         const brandColors = {
             toyota: '#e50000',
-            honda: '#0033a0',
+            kia: '#0033a0',
             nissan: '#c3002f',
             ford: '#003478',
             chevrolet: '#d1a856',

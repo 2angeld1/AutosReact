@@ -1,51 +1,14 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { CarContext } from '../context/CarContext';
+import React, { useState } from 'react';
 
-const SearchFilter = ({ onSearch }) => {
-    const { cars } = useContext(CarContext);
-    
-    // Estado del filtro
+const SearchFilter = ({ onSearch, cars }) => {
+    // Estado del filtro simplificado según requisitos
     const [filters, setFilters] = useState({
-        make: 'any',
-        model: '',
-        yearMin: '',
-        yearMax: '',
-        priceMin: '',
-        priceMax: '',
+        searchTerm: '', // Para marca y modelo combinados
+        year: '',
+        price: '',
         fuelType: 'any',
         transmission: 'any'
     });
-    
-    // Opciones para el select de marcas
-    const [makeOptions, setMakeOptions] = useState([]);
-    
-    // Cargar opciones de marcas populares
-    useEffect(() => {
-        // Lista de marcas comunes para mostrar en el dropdown
-        const popularMakes = [
-            'toyota', 'honda', 'ford', 'chevrolet', 'nissan', 
-            'bmw', 'audi', 'mercedes', 'volkswagen', 'hyundai', 
-            'kia', 'subaru', 'mazda', 'lexus', 'tesla', 'porsche'
-        ];
-        
-        // Añadir cualquier otra marca que ya tengamos en la lista de coches
-        if (cars.length > 0) {
-            const existingMakes = new Set(cars.map(car => car.make.toLowerCase()));
-            popularMakes.forEach(make => existingMakes.add(make));
-            
-            // Convertir a array, ordenar y capitalizar
-            const sortedMakes = [...existingMakes].sort().map(
-                make => make.charAt(0).toUpperCase() + make.slice(1)
-            );
-            
-            setMakeOptions(sortedMakes);
-        } else {
-            // Si no hay coches cargados, usar solo las marcas populares
-            setMakeOptions(popularMakes.map(
-                make => make.charAt(0).toUpperCase() + make.slice(1)
-            ));
-        }
-    }, [cars]);
     
     // Manejador de cambios en los inputs
     const handleFilterChange = (e) => {
@@ -65,12 +28,9 @@ const SearchFilter = ({ onSearch }) => {
     // Manejador para limpiar filtros
     const handleClear = () => {
         setFilters({
-            make: 'any',
-            model: '',
-            yearMin: '',
-            yearMax: '',
-            priceMin: '',
-            priceMax: '',
+            searchTerm: '',
+            year: '',
+            price: '',
             fuelType: 'any',
             transmission: 'any'
         });
@@ -81,93 +41,18 @@ const SearchFilter = ({ onSearch }) => {
             <div className="columns is-multiline">
                 <div className="column is-6-tablet is-3-desktop">
                     <div className="field">
-                        <label className="label has-text-white">Marca</label>
-                        <div className="control">
-                            <div className="select is-fullwidth">
-                                <select 
-                                    name="make" 
-                                    value={filters.make} 
-                                    onChange={handleFilterChange}
-                                >
-                                    <option value="any">Todas las marcas</option>
-                                    {makeOptions.map(make => (
-                                        <option key={make.toLowerCase()} value={make.toLowerCase()}>
-                                            {make}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="column is-6-tablet is-3-desktop">
-                    <div className="field">
-                        <label className="label has-text-white">Modelo</label>
-                        <div className="control">
-                            <input 
-                                className="input" 
-                                type="text" 
-                                name="model" 
-                                placeholder="Ej. Camry, Civic..." 
-                                value={filters.model}
-                                onChange={handleFilterChange}
-                            />
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="column is-6-tablet is-3-desktop">
-                    <div className="field">
-                        <label className="label has-text-white">Año mínimo</label>
-                        <div className="control">
-                            <input 
-                                className="input" 
-                                type="number" 
-                                name="yearMin" 
-                                placeholder="Ej. 2015" 
-                                value={filters.yearMin}
-                                onChange={handleFilterChange}
-                                min="1990"
-                                max={new Date().getFullYear()}
-                            />
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="column is-6-tablet is-3-desktop">
-                    <div className="field">
-                        <label className="label has-text-white">Año máximo</label>
-                        <div className="control">
-                            <input 
-                                className="input" 
-                                type="number" 
-                                name="yearMax" 
-                                placeholder="Ej. 2023" 
-                                value={filters.yearMax}
-                                onChange={handleFilterChange}
-                                min="1990"
-                                max={new Date().getFullYear()}
-                            />
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="column is-6-tablet is-3-desktop">
-                    <div className="field">
-                        <label className="label has-text-white">Precio mínimo</label>
+                        <label className="label has-text-white">Marca y Modelo</label>
                         <div className="control has-icons-left">
                             <input 
                                 className="input" 
-                                type="number" 
-                                name="priceMin" 
-                                placeholder="Ej. 10000" 
-                                value={filters.priceMin}
+                                type="text" 
+                                name="searchTerm" 
+                                placeholder="Ej. Toyota Corolla" 
+                                value={filters.searchTerm}
                                 onChange={handleFilterChange}
-                                min="0"
                             />
                             <span className="icon is-small is-left">
-                                <i className="fas fa-dollar-sign"></i>
+                                <i className="fas fa-car"></i>
                             </span>
                         </div>
                     </div>
@@ -175,14 +60,32 @@ const SearchFilter = ({ onSearch }) => {
                 
                 <div className="column is-6-tablet is-3-desktop">
                     <div className="field">
-                        <label className="label has-text-white">Precio máximo</label>
+                        <label className="label has-text-white">Año</label>
+                        <div className="control">
+                            <input 
+                                className="input" 
+                                type="number" 
+                                name="year" 
+                                placeholder="Ej. 2022" 
+                                value={filters.year}
+                                onChange={handleFilterChange}
+                                min="1990"
+                                max={new Date().getFullYear()}
+                            />
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="column is-6-tablet is-3-desktop">
+                    <div className="field">
+                        <label className="label has-text-white">Precio</label>
                         <div className="control has-icons-left">
                             <input 
                                 className="input" 
                                 type="number" 
-                                name="priceMax" 
-                                placeholder="Ej. 50000" 
-                                value={filters.priceMax}
+                                name="price" 
+                                placeholder="Presupuesto máximo" 
+                                value={filters.price}
                                 onChange={handleFilterChange}
                                 min="0"
                             />

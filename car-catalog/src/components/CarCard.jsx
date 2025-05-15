@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CarContext } from '../context/CarContext';
+import ErrorBoundaryImage from './ErrorBoundaryImage';
 
 const CarCard = ({ car }) => {
     const [imgError, setImgError] = useState(false);
@@ -10,7 +11,7 @@ const CarCard = ({ car }) => {
     const getBrandColor = (make) => {
         const brandColors = {
             toyota: '#e50000',
-            honda: '#0033a0',
+            kia: '#0033a0',
             nissan: '#c3002f',
             ford: '#003478',
             chevrolet: '#d1a856',
@@ -39,11 +40,11 @@ const CarCard = ({ car }) => {
                         </div>
                     ) : (
                         <figure className="image is-4by3">
-                            <img 
-                                src={car.image}
-                                alt={`${car.make} ${car.model}`} 
-                                className="car-image"
-                                onError={handleImageError}
+                            <ErrorBoundaryImage 
+                                src={car.image} 
+                                alt={`${car.make} ${car.model} ${car.year}`}
+                                fallbackSrc={`https://placehold.co/800x450/1a1a1a/ffffff?text=${car.make}+${car.model}`}
+                                className="card-img-top"
                             />
                             <span 
                                 className="car-brand-badge" 
