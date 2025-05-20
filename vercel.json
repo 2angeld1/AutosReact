@@ -9,5 +9,15 @@
           }
         ]
       }
-    ]
+    ],
+    "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/npm",
+      "config": {
+        "installCommand": "npm install --no-save react-scripts && npm install",
+        "buildCommand": "npm run build"
+      }
+    }
+  ]
   }
