@@ -1,0 +1,13 @@
+{
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; img-src 'self' data: blob: https://*.dealerinspire.com https://*.dealer.com https://*.sincrod.com https://*.cstatic-images.com https://*.iihs.org https://images.unsplash.com https://source.unsplash.com https://*.ytimg.com https://*.bmwusa.com https://*.googleapis.com https://*.gstatic.com https://*.duckduckgo.com https://*.google.com https://via.placeholder.com *; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; connect-src 'self' https://*.api-ninjas.com https://*.googleapis.com;"
+          }
+        ]
+      }
+    ]
+  }
